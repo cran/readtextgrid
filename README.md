@@ -5,10 +5,9 @@
 
 <!-- badges: start -->
 
-[![Travis build
-status](https://travis-ci.org/tjmahr/readtextgrid.svg?branch=master)](https://travis-ci.org/tjmahr/readtextgrid)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/readtextgrid)](https://CRAN.R-project.org/package=readtextgrid)
+[![R-CMD-check](https://github.com/tjmahr/readtextgrid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tjmahr/readtextgrid/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 readtextgrid parses Praat textgrids into R dataframes.
@@ -30,8 +29,8 @@ remotes::install_github("tjmahr/readtextgrid")
 
 ## Basic example
 
-Here is the example textgrid created by Praat. It was created using `New
--> Create TextGrid...` with default settings in Praat.
+Here is the example textgrid created by Praat. It was created using
+`New -> Create TextGrid...` with default settings in Praat.
 
 <img src="man/figures/demo-textgrid.png" width="600" />
 
@@ -46,7 +45,7 @@ library(readtextgrid)
 tg <- example_textgrid()
 
 read_textgrid(path = tg)
-#> # A tibble: 3 x 10
+#> # A tibble: 3 × 10
 #>   file                    tier_num tier_name tier_type    tier_xmin tier_xmax
 #>   <chr>                      <dbl> <chr>     <chr>            <dbl>     <dbl>
 #> 1 Mary_John_bell.TextGrid        1 Mary      IntervalTier         0         1
@@ -56,7 +55,7 @@ read_textgrid(path = tg)
 #>   <dbl> <dbl> <chr>          <int>
 #> 1     0     1 ""                 1
 #> 2     0     1 ""                 1
-#> 3    NA    NA  <NA>             NA
+#> 3    NA    NA <NA>              NA
 ```
 
 The dataframe contains one row per annotation: one row for each interval
@@ -66,25 +65,25 @@ values.
 
 The columns encode the following information:
 
-  - `file` filename of the textgrid. By default this column uses the
-    filename in `path`. A user can override this value by setting the
-    `file` argument in `read_textgrid(path, file)`, which can be useful
-    if textgrids are stored in speaker-specific folders.
-  - `tier_num` the number of the tier (as in the left margin of the
-    textgrid editor)
-  - `tier_name` the name of the tier (as in the right margin of the
-    textgrid editor)
-  - `tier_type` the type of the tier. `"IntervalTier"` for interval
-    tiers and `"TextTier"` for point tiers (this is the terminology used
-    inside of the textgrid file format).
-  - `tier_xmin`, `tier_xmax` start and end times of the tier in seconds
-  - `xmin`, `xmax` start and end times of the textgrid interval or point
-    tier annotation in seconds
-  - `text` the text in the annotation
-  - `annotation_num` the number of the annotation in that tier (1 for
-    the first annotation, etc.)
+- `file` filename of the textgrid. By default this column uses the
+  filename in `path`. A user can override this value by setting the
+  `file` argument in `read_textgrid(path, file)`, which can be useful if
+  textgrids are stored in speaker-specific folders.
+- `tier_num` the number of the tier (as in the left margin of the
+  textgrid editor)
+- `tier_name` the name of the tier (as in the right margin of the
+  textgrid editor)
+- `tier_type` the type of the tier. `"IntervalTier"` for interval tiers
+  and `"TextTier"` for point tiers (this is the terminology used inside
+  of the textgrid file format).
+- `tier_xmin`, `tier_xmax` start and end times of the tier in seconds
+- `xmin`, `xmax` start and end times of the textgrid interval or point
+  tier annotation in seconds
+- `text` the text in the annotation
+- `annotation_num` the number of the annotation in that tier (1 for the
+  first annotation, etc.)
 
-## Reading in a directory of textgrids
+## Reading in directories of textgrids
 
 Suppose you have data on multiple speakers with one folder of textgrids
 per speaker. As an example, this package has a folder called
@@ -105,7 +104,7 @@ speakers.
         +-- s2T04.TextGrid
         \-- s2T05.TextGrid
 
-First, we create a set of paths to read into R.
+First, we create a vector of file-paths to read into R.
 
 ``` r
 # Get the path of the folder bundled with the package
@@ -120,14 +119,15 @@ paths <- list.files(
 )
 ```
 
-We can use `purrr::map_dfr()` to read all these textgrids into R, but
-note that this way loses the speaker information.
+We can use `purrr::map_dfr()`–*map* the `read_textgrid` function over
+the `paths` and combine the dataframes (`_dfr`)—to read all these
+textgrids into R. But note that this way loses the speaker information.
 
 ``` r
 library(purrr)
 
 map_dfr(paths, read_textgrid)
-#> # A tibble: 150 x 10
+#> # A tibble: 150 × 10
 #>    file           tier_num tier_name tier_type    tier_xmin tier_xmax  xmin
 #>    <chr>             <dbl> <chr>     <chr>            <dbl>     <dbl> <dbl>
 #>  1 s2T01.TextGrid        1 words     IntervalTier         0      1.35 0    
@@ -152,7 +152,7 @@ map_dfr(paths, read_textgrid)
 #>  8 0.522 "D"                  4
 #>  9 0.621 "HH"                 5
 #> 10 0.783 "AW1"                6
-#> # ... with 140 more rows
+#> # ℹ 140 more rows
 ```
 
 We can use `purrr::map2_dfr()` and some dataframe manipulation to add
@@ -162,19 +162,19 @@ the speaker information.
 library(dplyr)
 
 # This tells read_textgrid() to set the file column to the full path
-data <- map2_dfr(paths, paths, read_textgrid) %>% 
+data <- map2_dfr(paths, paths, read_textgrid) |> 
   mutate(
     # basename() removes the folder part from a path, 
     # dirname() removes the file part from a path
     speaker = basename(dirname(file)),
     file = basename(file),
-  ) %>% 
+  ) |> 
   select(
     speaker, everything()
   )
 
 data
-#> # A tibble: 150 x 11
+#> # A tibble: 150 × 11
 #>    speaker    file           tier_num tier_name tier_type    tier_xmin tier_xmax
 #>    <chr>      <chr>             <dbl> <chr>     <chr>            <dbl>     <dbl>
 #>  1 speaker001 s2T01.TextGrid        1 words     IntervalTier         0      1.35
@@ -199,7 +199,7 @@ data
 #>  8 0.495 0.522 "D"                  4
 #>  9 0.522 0.621 "HH"                 5
 #> 10 0.621 0.783 "AW1"                6
-#> # ... with 140 more rows
+#> # ℹ 140 more rows
 ```
 
 Another strategy would be to read the textgrid dataframes into a list
@@ -211,88 +211,144 @@ data_nested <- tibble(
   speaker = basename(dirname(paths)),
   data = map(paths, read_textgrid)
 )
+
+# We have one row per textgrid dataframe because `data` is a list column
 data_nested
-#> # A tibble: 10 x 2
+#> # A tibble: 10 × 2
 #>    speaker    data              
 #>    <chr>      <list>            
-#>  1 speaker001 <tibble [13 x 10]>
-#>  2 speaker001 <tibble [15 x 10]>
-#>  3 speaker001 <tibble [16 x 10]>
-#>  4 speaker001 <tibble [12 x 10]>
-#>  5 speaker001 <tibble [19 x 10]>
-#>  6 speaker002 <tibble [13 x 10]>
-#>  7 speaker002 <tibble [15 x 10]>
-#>  8 speaker002 <tibble [16 x 10]>
-#>  9 speaker002 <tibble [12 x 10]>
-#> 10 speaker002 <tibble [19 x 10]>
+#>  1 speaker001 <tibble [13 × 10]>
+#>  2 speaker001 <tibble [15 × 10]>
+#>  3 speaker001 <tibble [16 × 10]>
+#>  4 speaker001 <tibble [12 × 10]>
+#>  5 speaker001 <tibble [19 × 10]>
+#>  6 speaker002 <tibble [13 × 10]>
+#>  7 speaker002 <tibble [15 × 10]>
+#>  8 speaker002 <tibble [16 × 10]>
+#>  9 speaker002 <tibble [12 × 10]>
+#> 10 speaker002 <tibble [19 × 10]>
 
+# promote the nested dataframes into the main dataframe
 tidyr::unnest(data_nested, "data")
-#> # A tibble: 150 x 11
-#>    speaker file  tier_num tier_name tier_type tier_xmin tier_xmax  xmin  xmax
-#>    <chr>   <chr>    <dbl> <chr>     <chr>         <dbl>     <dbl> <dbl> <dbl>
-#>  1 speake~ s2T0~        1 words     Interval~         0      1.35 0     0.297
-#>  2 speake~ s2T0~        1 words     Interval~         0      1.35 0.297 0.522
-#>  3 speake~ s2T0~        1 words     Interval~         0      1.35 0.522 0.972
-#>  4 speake~ s2T0~        1 words     Interval~         0      1.35 0.972 1.35 
-#>  5 speake~ s2T0~        2 phones    Interval~         0      1.35 0     0.297
-#>  6 speake~ s2T0~        2 phones    Interval~         0      1.35 0.297 0.36 
-#>  7 speake~ s2T0~        2 phones    Interval~         0      1.35 0.36  0.495
-#>  8 speake~ s2T0~        2 phones    Interval~         0      1.35 0.495 0.522
-#>  9 speake~ s2T0~        2 phones    Interval~         0      1.35 0.522 0.621
-#> 10 speake~ s2T0~        2 phones    Interval~         0      1.35 0.621 0.783
-#> # ... with 140 more rows, and 2 more variables: text <chr>,
-#> #   annotation_num <int>
+#> # A tibble: 150 × 11
+#>    speaker    file  tier_num tier_name tier_type tier_xmin tier_xmax  xmin  xmax
+#>    <chr>      <chr>    <dbl> <chr>     <chr>         <dbl>     <dbl> <dbl> <dbl>
+#>  1 speaker001 s2T0…        1 words     Interval…         0      1.35 0     0.297
+#>  2 speaker001 s2T0…        1 words     Interval…         0      1.35 0.297 0.522
+#>  3 speaker001 s2T0…        1 words     Interval…         0      1.35 0.522 0.972
+#>  4 speaker001 s2T0…        1 words     Interval…         0      1.35 0.972 1.35 
+#>  5 speaker001 s2T0…        2 phones    Interval…         0      1.35 0     0.297
+#>  6 speaker001 s2T0…        2 phones    Interval…         0      1.35 0.297 0.36 
+#>  7 speaker001 s2T0…        2 phones    Interval…         0      1.35 0.36  0.495
+#>  8 speaker001 s2T0…        2 phones    Interval…         0      1.35 0.495 0.522
+#>  9 speaker001 s2T0…        2 phones    Interval…         0      1.35 0.522 0.621
+#> 10 speaker001 s2T0…        2 phones    Interval…         0      1.35 0.621 0.783
+#> # ℹ 140 more rows
+#> # ℹ 2 more variables: text <chr>, annotation_num <int>
 ```
 
 ## Other tips
+
+### Speeding things up
+
+Do you have thousands of textgrids to read? The following workflow can
+speed things up. We are going to **read the textgrids in parallel**. We
+use the future package to manage the parallel computation. We use the
+furrr package to get future-friendly versions of the purrr functions. We
+tell future to use a `multisession` `plan` for parallelism: Do the extra
+computation on separate R sessions in the background. Then everything
+else is the same. Just replace `map()` with `future_map()`.
+
+``` r
+library(future)
+library(furrr)
+plan(multisession, workers = 4)
+
+data_nested <- tibble(
+  speaker = basename(dirname(paths)),
+  data = future_map(paths, read_textgrid)
+)
+```
+
+By default, readtextgrid uses `readr::guess_encoding()` to determine the
+encoding of the textgrid before reading it in. But if you know the
+encoding beforehand, you can skip this guessing. In my limited testing,
+I found that **setting the encoding** could reduce benchmark times by
+3–4% compared to guessing the encoding.
+
+Here, we read 100 textgrids using different approaches to benchmark the
+results.
+
+``` r
+paths_bench <- sample(paths, 100, replace = TRUE)
+bench::mark(
+  lapply_guess = lapply(paths_bench, read_textgrid),
+  lapply_set = lapply(paths_bench, read_textgrid, encoding = "UTF-8"),
+  future_guess = future_map(paths_bench, read_textgrid),
+  future_set = future_map(paths_bench, read_textgrid, encoding = "UTF-8"), 
+  min_iterations = 5,
+  check = TRUE
+)
+#> Warning: Some expressions had a GC in every iteration; so filtering is
+#> disabled.
+#> # A tibble: 4 × 6
+#>   expression        min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 lapply_guess    3.61s    3.67s     0.262  183.89MB     1.89
+#> 2 lapply_set      3.52s    3.54s     0.278  176.01MB     1.61
+#> 3 future_guess    1.33s    1.36s     0.732    5.14MB     0   
+#> 4 future_set      1.24s    1.27s     0.783    5.14MB     0
+```
 
 ### Helpful columns
 
 The following columns are often helpful:
 
-  - `duration` of an interval
-  - `xmid` midpoint of an interval
-  - `total_annotations` total number of annotations on a tier
+- `duration` of an interval
+- `xmid` midpoint of an interval
+- `total_annotations` total number of annotations on a tier
 
 Here is how to create them:
 
 ``` r
-data %>%
+data |>
   # grouping needed for counting annotations per tier per file per speaker
-  group_by(speaker, file, tier_num) %>%
+  group_by(speaker, file, tier_num) |>
   mutate(
     duration = xmax - xmin,
     xmid = xmin + (xmax - xmin) / 2,
     total_annotations = sum(!is.na(annotation_num))
-  ) %>% 
-  ungroup() %>% 
+  ) |> 
+  ungroup() |> 
   glimpse()
-#> Observations: 150
-#> Variables: 14
-#> $ speaker           <chr> "speaker001", "speaker001", "speaker001", "speake...
-#> $ file              <chr> "s2T01.TextGrid", "s2T01.TextGrid", "s2T01.TextGr...
-#> $ tier_num          <dbl> 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1...
-#> $ tier_name         <chr> "words", "words", "words", "words", "phones", "ph...
-#> $ tier_type         <chr> "IntervalTier", "IntervalTier", "IntervalTier", "...
-#> $ tier_xmin         <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
-#> $ tier_xmax         <dbl> 1.348571, 1.348571, 1.348571, 1.348571, 1.348571,...
-#> $ xmin              <dbl> 0.000, 0.297, 0.522, 0.972, 0.000, 0.297, 0.360, ...
-#> $ xmax              <dbl> 0.297000, 0.522000, 0.972000, 1.348571, 0.297000,...
-#> $ text              <chr> "", "bird", "house", "", "sil", "B", "ER1", "D", ...
-#> $ annotation_num    <int> 1, 2, 3, 4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4...
-#> $ duration          <dbl> 0.29700000, 0.22500000, 0.45000000, 0.37657143, 0...
-#> $ xmid              <dbl> 0.148500, 0.409500, 0.747000, 1.160286, 0.148500,...
-#> $ total_annotations <int> 4, 4, 4, 4, 9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4...
+#> Rows: 150
+#> Columns: 14
+#> $ speaker           <chr> "speaker001", "speaker001", "speaker001", "speaker00…
+#> $ file              <chr> "s2T01.TextGrid", "s2T01.TextGrid", "s2T01.TextGrid"…
+#> $ tier_num          <dbl> 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2…
+#> $ tier_name         <chr> "words", "words", "words", "words", "phones", "phone…
+#> $ tier_type         <chr> "IntervalTier", "IntervalTier", "IntervalTier", "Int…
+#> $ tier_xmin         <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+#> $ tier_xmax         <dbl> 1.348571, 1.348571, 1.348571, 1.348571, 1.348571, 1.…
+#> $ xmin              <dbl> 0.000, 0.297, 0.522, 0.972, 0.000, 0.297, 0.360, 0.4…
+#> $ xmax              <dbl> 0.297000, 0.522000, 0.972000, 1.348571, 0.297000, 0.…
+#> $ text              <chr> "", "bird", "house", "", "sil", "B", "ER1", "D", "HH…
+#> $ annotation_num    <int> 1, 2, 3, 4, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 1…
+#> $ duration          <dbl> 0.29700000, 0.22500000, 0.45000000, 0.37657143, 0.29…
+#> $ xmid              <dbl> 0.148500, 0.409500, 0.747000, 1.160286, 0.148500, 0.…
+#> $ total_annotations <int> 4, 4, 4, 4, 9, 9, 9, 9, 9, 9, 9, 9, 9, 4, 4, 4, 4, 1…
 ```
 
 ### Launching Praat
 
 *This tip is written from the perspective of a Windows user who uses git
-bash for a terminal*. To open textgrids in Praat, you can tell R to call
-Praat from the command line. You have to know where the location of the
-Praat binary is though. I like to keep a copy in my project directories.
-So, assuming that Praat.exe in my working folder, the following would
-open the 10 textgrids in `paths` in Praat.
+bash for a terminal*.
+
+To open textgrids in Praat, you can tell R to call Praat from the
+command line. You have to know where the location of the Praat binary is
+though. I like to keep a copy in my project directories. So, assuming
+that Praat.exe in my working folder, the following would open the 10
+textgrids in `paths` in Praat.
 
 ``` r
 system2(
@@ -304,11 +360,11 @@ system2(
 
 ## Limitations
 
-readtextgrid supports textgrids created by Praat by using `Save as text
-file...`. It uses a parsing strategy based on regular expressions
-targeting indentation patterns and text flags in the file format. The
-[formal specification of the textgrid
-format](http://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html),
+readtextgrid supports textgrids created by Praat by using
+`Save as text file...`. It uses a parsing strategy based on regular
+expressions targeting indentation patterns and text flags in the file
+format. The [formal specification of the textgrid
+format](https://www.fon.hum.uva.nl/praat/manual/TextGrid_file_formats.html),
 however, is much more flexible. As a result, not every textgrid that
 Praat can open—especially the minimal “short text” files—is compatible
 with this package.
@@ -319,7 +375,7 @@ readtextgrid was created to process data from the [WISC Lab
 project](https://kidspeech.wisc.edu/). Thus, development of this package
 was supported by NIH R01DC009411 and NIH R01DC015653.
 
------
+------------------------------------------------------------------------
 
 Please note that the ‘readtextgrid’ project is released with a
 [Contributor Code of
